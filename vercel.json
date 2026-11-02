@@ -1,0 +1,10 @@
+{
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [{ "type": "host", "value": "udyao.vercel.app" }],
+      "destination": "https://www.liderbogotol.pro/:path*",
+      "permanent": true
+    }
+  ]
+}
