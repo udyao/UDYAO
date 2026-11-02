@@ -392,7 +392,7 @@ header.top { border-bottom: 1px solid var(--line); box-shadow: 0 4px 18px rgba(2
 .project-cap span { color: var(--muted); font-size: .92rem; }
 .project ~ .work { aspect-ratio: auto; align-self: stretch; }
 
-.lb { position: fixed; inset: 0; z-index: 20; background: rgba(15, 15, 15, .92); display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 8px;
+.lb { position: fixed; inset: 0; z-index: 1000; background: rgba(15, 15, 15, .92); display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 8px;
   padding: max(16px, env(safe-area-inset-top, 0px)) max(12px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(12px, env(safe-area-inset-left, 0px)); }
 .lb-fig { margin: 0; display: grid; gap: 10px; justify-items: center; min-width: 0; }
 .lb-fig img { max-width: 100%; max-height: 80vh; object-fit: contain; border-radius: 10px; }
@@ -1401,6 +1401,8 @@ footer::before { right: -90px; bottom: -130px; width: 380px; background-image: v
 
   // Примеры работ: миниатюры переключают главное фото, по нажатию открывается просмотр крупно
   var lb = document.getElementById('lb');
+  // Окно просмотра переносим в конец страницы: внутри раздела оно оказывалось под следующими разделами
+  document.body.appendChild(lb);
   var lbImg = document.getElementById('lb-img');
   var lbCap = document.getElementById('lb-cap');
   var active = null;
