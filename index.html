@@ -865,6 +865,52 @@ footer::before { right: -90px; bottom: -130px; width: 380px; background-image: v
 }
 
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } html { scroll-behavior: auto; } }
+
+/* ===== Анимации ===== */
+/* Появление первого экрана */
+@keyframes a-up { from { opacity: 0; translate: 0 22px; } to { opacity: 1; translate: none; } }
+@keyframes a-pop { from { opacity: 0; scale: .86; } to { opacity: 1; scale: 1; } }
+@keyframes a-slide { from { opacity: 0; translate: 40px 0; } to { opacity: 1; translate: none; } }
+@keyframes a-draw { to { stroke-dashoffset: 0; } }
+@keyframes a-float { 0%, 100% { translate: 0 0; } 50% { translate: 0 -10px; } }
+@keyframes a-shine { 0%, 70% { left: -60%; } 100% { left: 130%; } }
+@keyframes a-wiggle { 0%, 88%, 100% { rotate: 0deg; } 92% { rotate: -8deg; } 96% { rotate: 6deg; } }
+@keyframes a-bar { from { translate: 0 100%; } to { translate: none; } }
+
+.hero-text > * { animation: a-up .7s cubic-bezier(.2, .7, .2, 1) both; }
+.hero-text > .hero-logo { animation-name: a-pop; animation-duration: .8s; }
+.hero-text > :nth-child(2) { animation-delay: .12s; }
+.hero-text > :nth-child(3) { animation-delay: .22s; }
+.hero-text > :nth-child(4) { animation-delay: .32s; }
+.hero-text > :nth-child(5) { animation-delay: .42s; }
+.hero-text > :nth-child(6) { animation-delay: .52s; }
+.hero-tri { animation: hero-rise .8s cubic-bezier(.2, .7, .2, 1) both, a-float 7s ease-in-out 1.2s infinite; }
+.hero-visual .hero-photo { animation: a-slide .9s cubic-bezier(.2, .7, .2, 1) .35s both; }
+.hero-lines path { stroke-dasharray: 2600; stroke-dashoffset: 2600; animation: a-draw 2.4s ease-out forwards; }
+.hero-lines path:nth-child(2) { animation-delay: .3s; }
+.hero-lines path:nth-child(3) { animation-delay: .6s; }
+
+/* Блик на главной кнопке */
+.hero-actions .btn-red { position: relative; overflow: hidden; }
+.hero-actions .btn-red::after { content: ""; position: absolute; top: 0; bottom: 0; left: -60%; width: 40%; background: linear-gradient(100deg, transparent, rgba(255, 255, 255, .45), transparent); transform: skewX(-20deg); animation: a-shine 4.5s ease-in-out 1.5s infinite; pointer-events: none; }
+
+/* Акция: сетка покачивается */
+.promo-net { animation: a-wiggle 5s ease-in-out 2s infinite; transform-origin: 50% 50%; }
+
+/* Нижняя панель на телефоне выезжает */
+.mobile-bar { animation: a-bar .5s cubic-bezier(.2, .7, .2, 1) .8s both; }
+
+/* Появление при прокрутке (только когда работает скрипт) */
+html.anim .rv { opacity: 0; translate: 0 26px; transition: opacity .7s cubic-bezier(.2, .7, .2, 1), translate .7s cubic-bezier(.2, .7, .2, 1); transition-delay: var(--d, 0s); }
+html.anim .rv.in { opacity: 1; translate: none; }
+html.anim .price-row.rv .price { opacity: 0; translate: 18px 0; transition: opacity .6s ease .25s, translate .6s ease .25s; }
+html.anim .price-row.rv.in .price { opacity: 1; translate: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-text > *, .hero-tri, .hero-visual .hero-photo, .hero-lines path, .hero-actions .btn-red::after, .promo-net, .mobile-bar { animation: none !important; }
+  .hero-lines path { stroke-dashoffset: 0; }
+  html.anim .rv, html.anim .price-row.rv .price { opacity: 1; translate: none; }
+}
 </style>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -1550,4 +1596,59 @@ footer::before { right: -90px; bottom: -130px; width: 380px; background-image: v
 })();
 </script>
 
+
+<script>
+/* Анимации: блоки плавно появляются при прокрутке, «5000+» отсчитывается */
+(function () {
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduce || !('IntersectionObserver' in window)) return;
+  var groups = [
+    '.sec-head', '.trust-grid .fact', '.price-row', '.extra', '.steps li', '.works .project',
+    '.faq details', '.office-info', '.office-grid > :not(.office-info)', '.c-item', '.form'
+  ];
+  var items = [];
+  groups.forEach(function (sel) {
+    document.querySelectorAll(sel).forEach(function (el, i) {
+      if (el.classList.contains('rv')) return;
+      el.classList.add('rv');
+      el.style.setProperty('--d', Math.min(i, 5) * 0.08 + 's');
+      items.push(el);
+    });
+  });
+  document.documentElement.classList.add('anim');
+
+  function count(el) {
+    var m = el.textContent.match(/^(\d+)(.*)$/);
+    if (!m || el.dataset.counted) return;
+    el.dataset.counted = '1';
+    var target = +m[1], tail = m[2], t0 = null;
+    function step(t) {
+      if (!t0) t0 = t;
+      var p = Math.min(1, (t - t0) / 1400);
+      el.textContent = Math.round(target * (1 - Math.pow(1 - p, 3))) + tail;
+      if (p < 1) requestAnimationFrame(step);
+    }
+    el.textContent = '0' + tail;
+    requestAnimationFrame(step);
+  }
+
+  var io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) {
+      if (!e.isIntersecting) return;
+      var box = e.target, list = box.hasAttribute('data-carousel') ? box.querySelectorAll('.rv') : [box];
+      Array.prototype.forEach.call(list, function (el) { el.classList.add('in'); el.querySelectorAll('.fact-big').forEach(count); });
+      io.unobserve(e.target);
+    });
+  }, { rootMargin: '0px 0px -8% 0px', threshold: 0.12 });
+  /* в листаемых блоках карточки появляются вместе, когда до блока дошла прокрутка, а не при каждом перелистывании */
+  var watched = [];
+  items.forEach(function (el) {
+    var box = el.closest('[data-carousel]') || el;
+    if (watched.indexOf(box) < 0) { watched.push(box); io.observe(box); }
+  });
+
+  /* подстраховка: если блок так и не попал в зону видимости (например, скрыт), показать его */
+  setTimeout(function () { items.forEach(function (el) { if (!el.getClientRects().length) el.classList.add('in'); }); }, 1500);
+})();
+</script>
 </body></html>
